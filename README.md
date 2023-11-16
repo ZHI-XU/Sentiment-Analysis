@@ -112,9 +112,9 @@ You can change the classifier you want by changing the functions in code.
 
 Here are some examples:
 
-If you want to get the result on classifier LR using up-sampling, then change all the "upper_sampling_DecisionTree" to "upper_sampling_lr".
+If you want to get the result on classifier LR using up-sampling, then change all the *'upper_sampling_DecisionTree'* to *'upper_sampling_lr'*.
 
-If you want to get the result on classifier GaussianNB using under-sampling, then change all the "upper_sampling_DecisionTree" to "under_sampling_GaussianNB".
+If you want to get the result on classifier GaussianNB using under-sampling, then change all the '*upper_sampling_DecisionTree*' to *'under_sampling_GaussianNB'*.
 
 - For unsupervised classifiers:
 
@@ -132,7 +132,7 @@ If you want to get the result on classifier GaussianNB using under-sampling, the
   python Agglomerative.py
   ```
 
-  You can use down-sampling by modifying the method name in line 347, 362, 390, 406 to "under_sampling"
+  You can use down-sampling by modifying the method name in line 347, 362, 390, 406 to '*under_sampling*'
 
 #### Code for RQ3
 
