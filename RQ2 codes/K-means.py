@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score, matthews_corrcoef
 import os
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from tensorflow.keras.models import load_model, Model
 from imblearn.over_sampling import SMOTE
 
@@ -151,6 +151,117 @@ def under_sampling_KMeans(X,y):
     y_train_10 = under_sampling_train_df_10["isRight"]
 
     model_10 = KMeans(n_clusters=2)
+    model_10.fit(X_train_10)
+
+    y_pred = model_10.predict(feature_test)
+    y_pred_res = [val_to_res(n) for n in y_pred]
+    y_pred_res = np.array(y_pred_res)
+
+    tp_10, fp_10, tn_10, fn_10 = compute_confusion_matrix(y_pred_res, labels_test)
+    acc_10, precision_10, recall_10, f1_10 = compute_indexes(tp_10, fp_10, tn_10, fn_10)
+    accuracy_10 = accuracy_score(labels_test, y_pred_res)
+    auc_10 = roc_auc_score(labels_test, y_pred_res)
+    mcc_10 = matthews_corrcoef(labels_test, y_pred_res)
+    return accuracy, f1, auc, mcc, accuracy_10, f1_10, auc_10, mcc_10
+
+
+def get_MiniBatchKMeans(X, y):
+    y = np.bitwise_not(y) * 1
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    # 加载模型
+    model = MiniBatchKMeans(n_clusters=2)
+    model.fit(X_train)
+    y_pred = model.predict(X_test)
+
+    # 预测
+    # y_pred_res = calc_labels(y_pred, y)
+    y_pred_res = np.array(y_pred)
+    tp, fp, tn, fn = compute_confusion_matrix(y_pred_res, y_test)
+    acc, precision, recall, f1 = compute_indexes(tp, fp, tn, fn)
+    accuracy = accuracy_score(y_test, y_pred_res)
+    auc = roc_auc_score(y_test, y_pred_res)
+    mcc = matthews_corrcoef(y_test, y_pred_res)
+    return accuracy, f1, auc, mcc
+
+
+def upper_sampling_MiniBatchKMeans(X, y):
+    y = np.bitwise_not(y) * 1  # 反转标签
+
+    # 上采样(100%)
+    features_train, feature_test, labels_train, labels_test = train_test_split(X, y, test_size=0.2)
+    oversampler = SMOTE()
+    os_features, os_labels = oversampler.fit_resample(features_train, labels_train)
+
+    features_train = pd.DataFrame(features_train)
+    labels_train = pd.DataFrame(labels_train)
+    train_df = pd.concat([features_train, labels_train], axis=1)
+    print("--------训练集---------")
+    print(train_df.shape)
+
+    model = MiniBatchKMeans(n_clusters=2)
+    model.fit(os_features)
+
+    y_pred = model.predict(feature_test)
+    y_pred_res = np.array(y_pred)
+
+    tp, fp, tn, fn = compute_confusion_matrix(y_pred_res, labels_test)
+    acc, precision, recall, f1 = compute_indexes(tp, fp, tn, fn)
+    accuracy = accuracy_score(labels_test, y_pred_res)
+    auc = roc_auc_score(labels_test, y_pred_res)
+    mcc = matthews_corrcoef(labels_test, y_pred_res)
+
+    # 10%
+    train_df = train_df.sample(frac=0.1).reset_index(drop=True)
+    features_train_10 = train_df.drop(columns=["isRight"])
+    labels_train_10 = train_df["isRight"]
+
+    oversampler = SMOTE()
+    os_features_10, os_labels_10 = oversampler.fit_resample(features_train_10, labels_train_10)
+
+    model_10 = MiniBatchKMeans(n_clusters=2)
+    model_10.fit(os_features_10)
+
+    y_pred = model_10.predict(feature_test)
+    y_pred_res = np.array(y_pred)
+
+    tp_10, fp_10, tn_10, fn_10 = compute_confusion_matrix(y_pred_res, labels_test)
+    acc_10, precision_10, recall_10, f1_10 = compute_indexes(tp_10, fp_10, tn_10, fn_10)
+    accuracy_10 = accuracy_score(labels_test, y_pred_res)
+    auc_10 = roc_auc_score(labels_test, y_pred_res)
+    mcc_10 = matthews_corrcoef(labels_test, y_pred_res)
+
+    return accuracy, f1, auc, mcc, accuracy_10, f1_10, auc_10, mcc_10
+
+
+def under_sampling_MiniBatchKMeans(X, y):
+    y = np.bitwise_not(y) * 1  # 反转标签
+
+    # 下采样
+    under_sampling_train_df, feature_test, labels_test = under_sampling(X, y)
+    feature_test = np.array(feature_test).reshape(-1, X.shape[1])
+    X_train = under_sampling_train_df.drop(columns=["isRight"])
+    y_train = under_sampling_train_df["isRight"]
+
+    model = MiniBatchKMeans(n_clusters=2)
+    model.fit(X_train)
+
+    y_pred = model.predict(feature_test)
+    y_pred_res = [val_to_res(n) for n in y_pred]
+    y_pred_res = np.array(y_pred_res)
+
+    tp, fp, tn, fn = compute_confusion_matrix(y_pred_res, labels_test)
+    acc, precision, recall, f1 = compute_indexes(tp, fp, tn, fn)
+    accuracy = accuracy_score(labels_test, y_pred_res)
+    auc = roc_auc_score(labels_test, y_pred_res)
+    mcc = matthews_corrcoef(labels_test, y_pred_res)
+
+    # 10%
+    under_sampling_train_df_10 = under_sampling_train_df.sample(frac=0.1).reset_index(drop=True)
+    X_train_10 = under_sampling_train_df_10.drop(columns=["isRight"])
+    y_train_10 = under_sampling_train_df_10["isRight"]
+
+    model_10 = MiniBatchKMeans(n_clusters=2)
     model_10.fit(X_train_10)
 
     y_pred = model_10.predict(feature_test)

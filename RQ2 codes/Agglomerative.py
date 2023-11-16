@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score, matthews_corrcoef
 import os
 import numpy as np
-from sklearn.cluster import AgglomerativeClustering, Birch, MiniBatchKMeans, MeanShift, SpectralClustering
+from sklearn.cluster import AgglomerativeClustering, MiniBatchKMeans
 from imblearn.over_sampling import SMOTE
 
 
